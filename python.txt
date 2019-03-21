@@ -1,2 +1,5 @@
 #Interpreter with command:
 python -c command [arg] ...
+
+3 * 'un' + 'ium'
+#'unununium'
