@@ -1,0 +1,787 @@
+#Interpreter with command:
+python -c command [arg] ...
+
+3 * 'un' + 'ium'
+#'unununium'
+
+ls[:] #returns a copy of the list
+
+ls[2:5] = ['C', 'D', 'E'] #does the obvious thing
+
+#multiple assignment
+a, b = 0, 1
+
+#print without newline
+print(b, end=',')
+
+for w in words[:]: #loop over a copy of words
+    #do something
+
+for/while ... else #else executes as long as there was no artificial break
+
+pass #does nothing
+
+######################################################################
+
+#arbitrary argument lists:
+def concat(*args, sep='/'):
+    return sep.join(args)
+
+concat('earth', 'mars', 'venus')
+#'earth/mars/venus'
+concat('earth', 'mars', 'vanus', sep='.')
+#'earth.mars.venus'
+
+######################################################################
+
+#unpacking argument lists:
+args = [3, 6]
+list(range(*args))
+#[3, 4, 5]
+
+######################################################################
+
+def name_age(name, age):
+    print(name, "is", age, "years old.")
+
+d = {"name": "tom", "age": 45}
+name_age(**d)
+#tom is 45 years old
+
+######################################################################
+
+#this
+my_function(a=1, b=1, c=1)
+#is equivalent to this
+args = {'a': 1, 'b': 2, 'c': 3}
+my_function(**args)
+
+######################################################################
+
+#lambdas
+lambda a, b: a + b
+
+#documentation strings
+def my_function():
+    """Do nothing, but document it
+
+    No, no, really, it doesn't do anything.
+    """
+    pass
+
+print(my_function.__doc__)
+#Do nothing, but document it.
+#
+#    No, no, really, it doesn't do anything.
+
+######################################################################
+
+#function annotations
+def f(ham: str, eggs: str = 'eggs') -> str:
+    print('Annotations:', f.__annotations__)
+    print('arguments:', ham, eggs)
+    return ham + ' and ' + eggs
+
+f('spam')
+#Annotations: {'ham': <class 'str'>, 'return': <class 'str'>, 'eggs': <class 'str'>}
+#Arguments: spam eggs
+#'spam and eggs'
+
+######################################################################
+
+#list comprehensions
+squares = [x**2 for x in range(10)]
+
+[(x, y) for x in [1, 2, 3] for y in [3, 1, 4] if x != y]
+#[(1, 3), (1, 4), (2, 3), (2, 1), (2, 4), (3, 1), (3, 4)]
+
+[(x, x**2) for x in range(6)]
+#[(0, 0), (1, 1), (2, 4), (3, 9), (4, 16), (5, 25)]
+
+vec = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+[num for elem in ven for num in elem]
+#[1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+matrix = [[1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12]]
+[[row[i] for row in matrix] for i in range(4)]
+#[[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]]
+
+#delete from a list by index
+del ls[index]
+del ls[start:end]
+
+t = 1, 2, 3
+t
+#(1, 2, 3)
+x, y, z = t
+x
+#1
+y
+#2
+z
+#3
+
+######################################################################
+#sets
+
+a = set('abracadabra')
+b = set('alacazam')
+a
+#{'a', 'r', 'b', 'c', 'd'}
+a-b
+#{'r', 'd', 'b'}
+a|b
+#{'a', 'c', 'r', 'd', 'b', 'm', 'z', 'l'}
+a&b
+#{'a', 'c'}
+a^b
+#{'r', 'd', 'b', 'm', 'z', 'l'}
+a = {x for x in 'abracadabra' if x not in 'abc'}
+a
+{'r', 'd'}
+
+######################################################################
+#dictionaries
+
+#keys of dictionary must be immutable:
+#strings, numbers, tuples (of strings, numbers, tuples)
+tel = {'jack': 4098, 'sape': 4139}
+tel['guide'] = 4127
+tel['jack']
+#4098
+del tel['sape']
+list(tel.keys())
+#['jack', 'guido']
+sorted(tel.keys())
+#['guido', 'jack']
+'guido' in tel
+#True
+
+dict([('sape', 4139), ('guido', 4127), ('jack', 4098)])
+#{'sape': 4139, 'jack': 4098, 'guido': 4127}
+
+{x: x**2 for x in (2, 4, 6)}
+#{2: 4, 4: 16, 6: 36}
+
+knights = {'gallahad': 'the pure', 'robin': 'the brave'}
+for k, v in knights.items():
+    print(k, v)
+#gallahad the pure
+#robin the brave
+
+for i, v in enumerate(['tic', 'tac', 'toe']):
+    print(i, v)
+#0 tic
+#1 tac
+#2 toe
+
+######################################################################
+
+questions = ['name', 'quest', 'favorite color']
+answers = ['lancelot', 'the holy grail', 'blue']
+for q, a in zip(questions, answers):
+    print('What is your {0}? It is {1}.'.format(q, a))
+#What is your name? It is lancelot.
+#What is your quest? It is the holy grail.
+#What is your favorite color? It is blue.
+
+
+######################################################################
+
+#printing values
+print('{0} and {1}'.format('spam', 'eggs'))
+#spam and eggs
+
+#open file
+with open('workfile', 'r' as f: #r -> read, w -> write, a -> append
+    f.read()
+    #'This is the entire file.\n'
+
+    f.readline()
+    #'This is the first line of the file.\n'
+
+    for line in f:
+        print(line, end='')
+    #This is the first line of the file.
+    #Second line of the file.
+
+    f.close()
+
+######################################################################
+#Errors and Exceptions
+for arg in sys.argv[1:]:
+    try:
+        f = open(arg, 'r')
+    except OSError:
+        print('cannot open', arg)
+    else:
+        print(arg, 'has', len(f.readlines()), 'lines')
+        f.close()
+    finally:
+        print('executing finally clause')
+
+
+######################################################################
+#Classes
+class Complex:
+    def __init__(self, realpart, imagpart):
+        self.r = realpart
+        self.i = imagpart
+
+x = Complex(3.0, -4.5)
+x.r, x.i
+(3.0, -4.5)
+
+xf = x.f
+while True:
+    print(xf())
+
+class Dog:
+    kind = 'canine'         #class variable
+
+    def __init__(self, name):
+        self.name = name    #instance variable
+
+class DerivedClassName(Base1, Base2, Base3):
+    ...
+
+#private variables should be prefaced by an underscore
+#they can still be accessed
+
+
+######################################################################
+#Iterators
+s = 'abc'
+it = iter(s)
+it
+#<iterator object at 0x00A1DB50>
+next(it)
+#'a'
+next(it)
+#'b'
+next(it)
+#'c'
+next(it)
+#Stop Iteration (exception)
+
+class Reverse:
+    """Iterator for looping over a sequence backwards."""
+    def __init__(self, data):
+        self.data = data
+        self.index = len(data)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index == 0:
+            raise StopIteration
+        self.index = self.index - 1
+        return self.data[self.index]
+
+######################################################################
+#Generators
+def reverse(data):
+    for index in range(len(data)-1, -1, -1):
+        yield data[index]
+
+
+######################################################################
+#Generator Expressions
+sum(i*i for i in range(10)) #sum of squares
+#285
+
+xvec = [10, 20, 30]
+yvec = [7, 5, 3]
+sum(x*y for x, y in zip(xvec, yvec)) #dot product
+#260
+
+
+######################################################################
+for color in colors:
+    print(color)
+
+for color in reversed(colors):
+    print(color)
+
+for i, color in enumberate(colors):
+    print(i, '-->', color)
+
+for name, color in zip(names, colors):
+    print(name, '-->', color)
+
+print sorted(colors, key=len)
+
+#2 argument form of iter requires
+#function to take 0 arguments
+#partial turns f.read from a function of 1 argument
+#into a function of zero arguments
+blocks = []
+for block in iter(partial(f.read, 32), ' '): #reads until space
+        blocks.append(block)
+
+def find(seq, target):
+    for i, value in enumerate(seq):
+        if value == target:
+            break
+    else:
+        return -1
+    return i
+
+d = {'matthew': 'blue', 'rachel': 'green', 'raymond': 'red'}
+
+for k in d: #for key in dictionary
+    print(k)
+
+for k, v in d.items():
+    print(k, '-->', v)
+
+d = dict(zip(names, colors))
+
+d = dict(enumerate(names))
+
+colors = ['red', 'green', 'red', 'blue']
+d = {}
+for color in colors:
+    if color not in d:
+        d[color] = 0
+    d[color] += 1
+
+for color in colors:
+    d[color] = d.get(color, 0) + 1
+
+d = defaultdict(int)
+for color in colors:
+    d[color] += 1
+
+
+######################################################################
+#Grouping with Dictionaries
+d = {}
+for name in names:
+    key = len(name)
+    if key not in d:
+        d[key] = []
+    d[key].append(name)
+
+d = {}
+for name in names:
+    key = len(name)
+    d.setdefault(key, []).append(name)
+
+d = defaultdict(list)
+for name in names:
+    key = len(name)
+    d[key].append(name)
+
+
+######################################################################
+#Linking Dictionaries
+d = ChainMap(dict1, dict2, dict3) #look in dict1, then dict2, then dict3
+
+
+######################################################################
+#Named Tuple
+#from collections import namedtuple
+Point = namedtyple('Point', 'x y')
+pt = Point(1.0, 5.0)
+print(pt.x)
+
+
+######################################################################
+#Virtual Environment
+pyvenv my_env
+source my_env/bin/activate
+deactivate
+
+
+######################################################################
+#Special Methods
+
+#Implement
+Class Deck():
+
+    #define self._cards to represent a standard 52 card deck
+
+    def __len__(self):
+        return len(self._cards)
+
+    def __getitem__(self, position):
+        return self._cards[position]
+
+#Use
+#these things are possible because we implemented
+#__len__ and __getitem__
+deck = Deck()
+len(deck)
+#52
+deck[0]
+#Card(rank='2', suit='spades')
+from random import choice
+choice(deck)
+#Card(rank='3', suit='hearts')
+deck[12::13]
+#[Card(rank='A', suit='spades'),...]
+for card in deck:
+    print(card)
+
+Card('Q', 'hearts') in deck
+#True
+
+
+######################################################################
+#Tuples
+traveler_ids = [('USA', '311'), ('BRA', 'CE3'), ('ESP', 'XDA')]
+for passport in sorted(traveler-ids):
+    print('%s/%s' % passport)
+#BRA/CE3
+#ESP/XDA
+#USA/311
+
+for country, _ in traveler_ids:
+    print(country)
+
+#USA
+#BRA
+#ESP
+
+
+######################################################################
+a, b, *rest = range(5)
+a, b, rest
+#(0, 1, [2, 3, 4])
+a, b, *rest = range(2)
+a, b, rest
+#(0, 1, [])
+a, *body, c = range(5)
+a, body, c
+#(0, [1, 2, 3], 4)
+
+metro_areas = [
+    ('Tokyo', 'JP', 36.9, (35.7, 139.7)),
+    ('Mexico City', 'MX', 20.1, (19.4, -99.1))]
+
+for name, cc, pop, (lattitude, longitude) in metro_areas:
+    #do stuff
+
+
+######################################################################
+#Named Slice
+DESCRIPTION = slice(6, 40)
+ITEM_TOTAL = slice(55, None)
+print(item[DESCRIPTION]) #equivalent to print(item[6:40])
+print(item[ITEM_TOTAL])  #equivalent to print(item[55:])
+
+a[min, k:l] #multidimensional slice
+x[i, ...] #if x is a four-dimensional array this is quivalent to x[i, :, :, :,]
+
+l = list(range(10))
+l[2:5] = [20, 30]
+l
+#[0, 1, 20, 30, 5, 6, 7, 8, 9]
+l[3::2] = [11, 22]
+l
+#[0, 1, 20, 11, 5, 22, 7, 8, 9]
+
+
+######################################################################
+#use bisect.insert to insert items into a sorted sequence
+#use bisect.bisect to search in a sort sequence
+
+######################################################################
+#counter
+ct = collections.Counter('abracadabra')
+ct
+#Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
+ct.update('aaaaazzz')
+ct
+#Counter({'a': 10, 'z': 3, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
+ct.most_common(2)
+[('a', 10), ('z', 3)]
+
+
+######################################################################
+#make class callable
+class MyClass():
+    #...
+    def __call__(self):
+        #some code
+
+my_class = MyClass()
+my_class() #possible because of implementation of __call__
+
+
+######################################################################
+#keyword-only arguments:
+def f(a, *, b):
+    return a, b
+
+f(1, b=2)
+(1, 2)
+
+
+######################################################################
+#decorators
+
+#assuming the existence of a decorator named 'decorate', these two
+#codeblocks are equivalent:
+@decorate
+def target():
+    print('running target()')
+
+
+def target():
+    print('running target()')
+
+target = decorate(target)
+
+######################################################################
+def deco(func):
+    def inner():
+        print('running inner()')
+    return inner
+
+@deco
+def target():
+    print('running target()')
+
+target()
+#running inner()
+target
+#<function deco.<locals>.inner at 0x10063b598
+
+
+######################################################################
+import functools
+@functools.lru_cache()
+def fibonacci(n):
+    if n < 2:
+        return n
+    return fibonacci(n-2) + fibonacci(n-1)
+
+
+######################################################################
+from functools import singledispatch
+import html
+
+@singledispatch
+def htmlize(obj):
+    content = html.escape(repr(obj))
+    return '<pre>{}</pre>'.format(content)
+
+@htmlize.register(str)
+def _(text):
+    content = html.escape(text).replace('\n', '<br>\n')
+    return '<p>{0}</p>'.format(content)
+
+
+######################################################################
+@d1
+@d2
+def f():
+    print('f')
+
+#is the same as
+def f():
+    print('f')
+
+f = d1(d2(f))
+
+######################################################################
+registry = set()
+
+def register(active = True):
+    def decorate(func):
+        print('running register(active = %s)->decorate(%s)'
+              % (active, func))
+        if active:
+            registry.add(func)
+        else:
+            registry.discard(func)
+
+        return func
+    return decorate
+
+@register(active=False)
+def f1():
+    print('running f1()')
+
+@register()
+def f2():
+    print('running f2()')
+
+######################################################################
+def __eq__(self, other):
+    return len(self) = len(other) and all(a == b for a, b in zip(self, other))
+
+######################################################################
+#interfaces
+
+#subclassing an Abstract Base Class
+class <MyClass>(<ABC>):
+    #...
+
+#defining an ABC:
+class <MyABC>(abc.ABC):
+    #...
+
+#registering a class as a virtual subclass:
+@<ABC>.register
+class <MyClass>():
+    #...
+
+#OR:
+<ABC>.register(<MyClass>)
+
+
+######################################################################
+#iterators and generators
+
+#iterator:
+    __next__
+        #returns the next available item, or raises StopIteration
+
+    __iter__
+        #returns self
+
+
+#iterable:
+    __iter__
+        #returns a new iterator
+
+
+#this
+s = 'ABC'
+for char in s:
+    print(char)
+
+#is equivalent to
+s = 'ABC'
+it = iter(s)
+while True:
+    try:
+        print(next(it))
+    except StopIteration:
+        del it
+        break
+
+
+#generator: any python function that uses the 'yield' keyword.
+
+def gen_123():
+    yield 1
+    yield 2
+    yield 3
+
+g = gen_123()
+next(g)
+#1
+next(g)
+#2
+
+
+######################################################################
+#this
+def aritprog_gen(begin, step, end=None):
+    result = type(begin + step)(begin)
+    forever = end is None
+    index = 0
+    while forever or result < end:
+        yield result
+        index += 1
+        result = being + step * index
+
+#is equivalent to
+import itertools
+
+def aritprog_gen(begin, step, end=None):
+    first = type(being + step)(begin)
+    ap_gen = itertools.count(first, step)
+    if end is not None:
+        ap_gen = itertools.takewhile(lambda n: n < end, ap_gen)
+    return ap_gen
+
+######################################################################
+def d6():
+    return randit(1, 6)
+
+d6_iter = iter(d6, 1)
+for roll in d6_iter:
+    print(roll)
+
+#<example outputs:>
+#4
+#3
+#6
+#3
+
+######################################################################
+#bad:
+try:
+    dangerous_call()
+    after_call()
+except OSError:
+    log('OSError...')
+
+#better:
+try:
+    dangerous_call()
+except OSError:
+    log('OSError...')
+else:
+    after_call()
+
+######################################################################
+#context managers:
+class LookingGlass:
+
+    def __enter__(self):
+        import sys
+        self.original_write = sys.stdout.write
+        sys.stdout.write = self.reverse_write
+        return 'JABBERWOCKY'
+
+    def reverse_write(self, text):
+        self.original_write(text[::-1])
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        import sys
+        sys.stdout.write = self.original_write
+        if exc_type is ZeroDivisionError:
+            print('Please DO NOT divide by zero!')
+            return True
+
+
+with LookingGlass() as what:
+    print('hello')
+    print(what)
+
+#olleh
+#YKCOWREBBAJ
+what
+#'JABBERWOCKY'
+
+
+######################################################################
+#coroutines
+def simple_coro2(a):
+    print('-> Started: a=', a)
+    b = yield a
+    print('-> Received: b=', b)
+    c = yield a + b
+    print('-> Received: c=', c)
+
+my_coro2 = simple_coro2(14)
+next(my_coro2)
+#-> Started: a = 14
+#14
+my_coro2.send(28)
+#-> Received: b = 28
+#42
+my_coro2.send(99)
+#-> Receiver: c = 99
+#Traceback (most recent call last):
+# File "<stdin>", line 1, in <module>
+#Stop Iteration
