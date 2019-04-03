@@ -112,3 +112,154 @@ stuff
 ;;[1 2 3 4]
 
 ;;lists
+'(1 2 3 4)
+
+(nth '(:a :b :c) 0)
+;;:a
+
+(nth '(:a :b :c) 2)
+;;:c
+
+(list 1 "two" {3 4})
+;;(1 "two {3 4})
+
+(conj '(1 2 3) 4)
+;; (4 1 2 3)
+
+;;sets
+#{"kurt vonnegut" 20 :icicle}
+
+(hash-set 1 1 2 2)
+;;#{1 2}
+
+(conj #{:a :b} :b)
+;;#{:a :b}
+
+(set [3 3 3 4 4])
+;;#{3 4}
+
+(contains? #{:a :b} :a)
+;;true
+
+(contains? #{:a :b} 3)
+;;false
+
+(contains? #{nil} nil)
+;;true
+
+(:a #{:a :b})
+;;:a
+
+(get #{:a :b} :a)
+;;:a
+
+(get #{:a nil} nil)
+;;nil
+
+(get #{:a :b} "kurt vonnegut")
+;;nil
+
+;;functions
+
+;;function calls
+(+ 1 2 3 4)
+(* 1 2 3 4)
+(first [1 2 3 4])
+
+(or + -)
+;;#<core$_PLUS_ clojure.core$_PLUS_@76dace31>
+
+((or + -) 1 2 3)
+;;6
+
+((and (= 1 1) +) 1 2 3)
+;;6
+
+((first [+ 0]) 1 2 3)
+;;6
+
+(inc 1.1)
+;;2.1
+
+(map inc [0 1 2 3])
+;;(1 2 3 4)
+
+
+;;defining functions
+
+;;function definitions are composed of five main parts
+;;1. 'defn'
+;;2. function name
+;;3. an optional docstring
+;;4. parameters listed in brackets
+;;5. function body
+(defn say-hello
+  "Say hello to someone"
+  [name]
+  (str "Hello " name))
+
+(say-hello "bob")
+;;"Hello bob"
+
+(defn multi-arity
+  ;; 3-arity arguments and body
+  ([first-arg second-arg third-arg]
+   (do-things first-arg second-arg third-arg))
+  ;; 2-arity arguments and body
+  ([first-arg second-arg]
+   (do-things first-arg second-arg))
+  ;; 3-arity arguments and body
+  ([first-arg]
+   (do-things first-arg)))
+
+;;rest parameter
+(defn add-two
+  [number]
+  (+ 2 number))
+
+(defn add-two-ls
+  [& numbers]
+  (map add-two numbers))
+
+(defn favorite-things
+  [name & things]
+  (str "Hi, " name ", here are my favorite things: "
+       (clojure.string/join ", " things)))
+
+(favorite-things "Sam" "gum" "shoes" "kara-te")
+;;"Hi, Sam, here are my favorite things: gum, shoes, kara-te"
+
+;;destructuring
+
+;;return the first element of a collection
+(defn my-first
+  [[first-thing]]
+  first-thing)
+
+(my-first ["oven" "bike" "war-axe"])
+;;"oven"
+
+(defn chooser
+  [[first-choice second-choice & unimportant-choices]]
+  (println (str "Your first choice is: " first-choice))
+  (println (str "Your second choice is: " second-choice))
+  (println (str "We're ignoring the rest of your choices. "
+                "Here they are in case you need to cry over them: "
+                (clojure.string/join ", " unimportant-choices))))
+
+(chooser ["Marmalade", "Handsome Jack", "Pigpen", "Aquaman"])
+;;Your first choice is: Marmalade
+;;Your second choice is: Handsome Jack
+;;We're ignoring the rest of your choices. Here they are in 
+;;case you need to cry over them: Pigpen, Aquaman
+
+(defn announce-treasure-location
+  [{lat :lat lng :lng}]
+  (println (str "Treasure lat: " lat))
+  (println (str "Treasure lng: " lng)))
+
+(announce-treasure-location {:lat 28.22 :lng 81.33})
+;;Treasure lat: 100
+;;Treasure lng: 50
+
+
