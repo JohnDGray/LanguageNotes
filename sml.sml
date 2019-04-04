@@ -63,4 +63,59 @@ concat(["ab", "cd", "e"]);
 
 (*-------------------------defining functions-------------------------*)
 
+fun square (x: real) = x * x;
+(* val square = fn : real -> real *)
+
+pi * square radius;
+(* val it = 50.26533 : real *)
+
+fun reverse (L) =
+  if L = nil then nil
+  else reverse(tl(L)) @ [hd(L)];
+(* val reverse = fn : 'a list -> 'a list *)
+
+(* mutual recursion *)
+fun
+  take (L) =
+    if L = nil then nil
+    else hd(L)::skip(tl(L))
+and
+  skip (L) =
+    if L = nil then nil
+    else take(tl(L));
+(* val take = fn : 'a list -> 'a list *)
+(* val skip = fn: 'a list -> 'a list *)
+
+(* patterns *)
+fun merge(nil, M) = M
+|   merge(L, nil) = L
+|   merge(L as x::xs, M as y::ys) = 
+      if x<y then x::merge(xs, M)
+      else y::merge(L, ys);
+(* val merge = fn : int list * int list -> int list *)
+
+(* let *)
+fun hundredthPower(x : real) =
+  let
+    val four = x*x*x*x;
+    val twenty = four*four*four*four*four
+  in
+    twenty * twenty * twenty * twenty * twenty
+  end;
+(* val hundredthPower = fn : real -> real *)
+
+(* splitting tuples and lists *)
+val (a, b, c) = (1, 2, 3);
+
+val [x, y, z] = [8, 9, 10];
+
+(* statement lists *)
+fun printList(nil) = ()
+|   printList(x::xs) = (
+      print(Int.toString(x));
+      print("\n");
+      printList(xs)
+    );
+(* printList = fn : int list -> unit *)
+
 
