@@ -262,4 +262,49 @@ stuff
 ;;Treasure lat: 100
 ;;Treasure lng: 50
 
+;;equivalent to above
+(defn announce-treasure-location
+  [{:keys [lat lng]}]
+  (println (str "Treasure lat: " lat))
+  (println (str "Treasure lng: " lng)))
 
+(defn receive-treasure-location
+  [{:keys [lat lng] :as treasure-location}]
+  (println (str "Treasure lat: " lat))
+  (println (str "Treasure lng: " lng))
+  (steer-ship! treasure-location)) ;; the point is that the original map is still accessible
+
+;;function body
+(defn illustrative-function
+  []
+  (+ 1 304)
+  30
+  "joe")
+
+(illustrative-function)
+;;"joe"
+
+;;anonymous functions
+(map (fn [name] (str "Hi, " name))
+     ["Darth Vader" "Mr. Magoo"])
+;;("Hi, Darth Vader" "Hi, Mr. Magoo")
+
+((fn [x] (* x 3)) 8)
+;;24
+
+(#(str %1 " and " %2) "cornbread" "butter beans")
+;;"cornbread and butter beans"
+
+(#(identity %&) 1 "blarg" :yip)
+;;(1 "blarg" :yip)
+
+;;returning functions
+(defn inc-maker
+  "Create a custom incrementor"
+  [inc-by]
+  #(+ % inc-by))
+
+(def inc3 (inc-maker 3))
+
+(inc3 7)
+;;10
