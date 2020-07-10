@@ -1,6 +1,18 @@
 #Interpreter with command:
 python -c command [arg] ...
 
+#Inspection odds and ends
+dir()
+dir(CLASS.__init__)
+CLASS.__init__.__defaults__
+CLASS.__mro__
+CLASS.__subclasses__()
+issubclass(a, b)
+isinstance(a, b)
+type(a)
+
+#######################################################################
+
 3 * 'un' + 'ium'
 #'unununium'
 
@@ -400,6 +412,9 @@ deactivate
 ######################################################################
 #Special Methods
 
+#Implement dunder methods. Use __repr__ for developers, __str__ for end users.
+#Prefer __repr__ if implementing only one, since __str__ falls back to __repr__.
+
 #Implement
 Class Deck():
 
@@ -491,7 +506,45 @@ l
 #use bisect.bisect to search in a sort sequence
 
 ######################################################################
-#counter
+#If a list will only contain numbers, an array.array is more efficient.
+from array import array
+from random import random
+floats = array('d', (random() for i in range(10**7)))
+fp = open('floats.bin', 'wb')
+floats.tofile(fp)
+fp.close()
+floats2 = array('d')
+fp = open('floats.bin', 'rb')
+floats2.fromfile(fp, 10**7)
+fp.close()
+floats2 == floats1
+#True
+
+######################################################################
+
+from collections import deque
+dq = deque(range(10), maxlen=10)
+dq
+#deque([0,1,2,3,4,5,6,7,8,9], maxlen=10)
+dq.rotate(3)
+dq
+#deque([7,8,9,0,1,2,3,4,5,6], maxlen=10)
+dq.rotate(-4)
+dq
+#deque([1,2,3,4,5,6,7,8,9,0], maxlen=10)
+dq.appendleft(-1)
+dq
+#deque([-1,1,2,3,4,5,6,7,8,9], maxlen=10)
+dq.extend([11,22,33])
+dq
+#deque([3,4,5,6,7,8,9,11,22,33], maxlen=10)
+
+
+######################################################################
+
+#collections.OrderedDict
+#collections.ChainMap
+#collections.Counter
 ct = collections.Counter('abracadabra')
 ct
 #Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
@@ -501,6 +554,29 @@ ct
 ct.most_common(2)
 [('a', 10), ('z', 3)]
 
+######################################################################
+
+import collections
+class StrKeyDict(collections.UserDict):
+    def __missing__(self, key):
+        if isinstance(key, str):
+            raise KeyError(key)
+        return self[str(key)]
+
+    def __contains__(self, key):
+        return str(key) in self.data
+
+    def __setitem__(self, key, item):
+        self.data[str(key)] = item
+
+######################################################################
+
+#Immutable Mappings
+from types import MappingProxyType
+d = {1: 'A'}
+d_proxy = MappingProxyType(d)
+d_proxy[1]
+#'A'
 
 ######################################################################
 #make class callable
@@ -521,6 +597,68 @@ def f(a, *, b):
 f(1, b=2)
 (1, 2)
 
+######################################################################
+
+#Function Annontations
+def clip(text: str, max_len:'int > 0'=80) -> str:
+    #...
+
+######################################################################
+
+#The Operator Module
+from functools import reduce
+from operator import mul
+def fact(n):
+    return reduce(mul, range(1, n+1))
+
+from operator import itemgetter
+cc_name = itemgetter(1, 0)
+for city in metro_data:
+    print(cc_name(city))
+
+#attrgetter extracts object attributes by name
+#can navigate through nested objects
+from operator import attrgetter
+name_lat = attrgetter('name', 'coord.lat')
+for city in metro_areas:
+    print(name_lat(city))
+
+#method caller
+from operator import methodcaller
+s = 'The time has come'
+hiphenate = methodcaller('replace', ' ', '-')
+hiphenate(s)
+#The-time-has-come
+
+#using partial to use a two-argument function where a one-argument callable is required
+from operator import mul
+from functools import partial
+triple = partial(mul, 3)
+triple(7)
+#21
+list(map(triple, range(1, 10)))
+#[3, 6, 9, 12, 15, 18, 21, 24, 27]
+
+######################################################################
+
+#first class functions
+#the promos list is built by introspection of the module global namespace
+promos = [globals()[name] for name in globals()
+            if name.endswith('_promo')
+            and name != 'best_promo']
+
+def best_promo(order):
+    return max(promo(order) for promo in promos)
+
+#alternative approach
+import inspect
+import promotions   #user created module
+
+promos = [func for name, func in
+            inspect.getmembers(promotions, inspect.isfunction)]
+
+def best_promo(order):
+    return max(promo(order) for promo in promos)
 
 ######################################################################
 #decorators
@@ -552,6 +690,55 @@ target()
 target
 #<function deco.<locals>.inner at 0x10063b598
 
+######################################################################
+
+#decorators for registration
+promos = []
+def promotion(promo_func):
+    promos.append(promo_func)
+    return promo_func
+
+@promotion
+def fidelity(order):
+    #...
+
+def best_promo(order):
+    return max(promo(order) for promo in promos)
+
+######################################################################
+
+#nonlocal keyword
+def make_averager():
+    count = 0
+    total = 0
+
+    def averager(new_value):
+        nonlocal count, total   #necessary to avoid having count and total treated as local variables
+        count += 1
+        total += new_value
+        return total/count
+
+    return averager
+
+######################################################################
+
+#a simple decorator to output the running time of functions
+import time
+
+def clock(func):
+    def clocked(*args):
+        t0 = time.perf_counter()
+        result = func(*args)
+        elapsed = time.perf_counter() - t0
+        name = func.__name__
+        print(elapsed, name)
+        return result
+    return clocked
+
+#use
+@clock
+def snooze(seconds):
+    time.sleep(seconds)
 
 ######################################################################
 import functools
@@ -590,6 +777,8 @@ def f():
 f = d1(d2(f))
 
 ######################################################################
+
+#parameterized decorators
 registry = set()
 
 def register(active = True):
@@ -613,6 +802,48 @@ def f2():
     print('running f2()')
 
 ######################################################################
+
+#Object References, Mutability, and Recycling
+# copy module provides copy.deepcopy
+
+# weakref provides weak reference collections, i.e. collections that
+# will not prevent their members from being garbage collected
+# unless they are also referenced somewhere else
+# WeakValueDictionary and WeakKeyDictionary are examples
+# Some types cannot be targets of weak references (list, dict, int, tuple etc.)
+
+######################################################################
+
+#A Pythonic Object
+#@classmethod: receives the class as its first argument
+#@staticmethod: does not receive an implicit first argument, 
+#       essentially just a normal function inside a class definition
+#@staticmethod arguably serves no purpose
+
+#implementing __format__
+#inside the Vector2d class
+def __format__(self, fmt_spec=''):
+    components = (format(c, fmt_spec) for x in self)
+    return '({}, {})'.format(*components)
+
+#read_only properties
+class Vector2d:
+    def __init__(self, x, y):
+        self.__x = float(x)
+        self.__y = float(y)
+
+    @property
+    def x(self):
+        return self.__x
+
+######################################################################
+
+#Sequence Hacking, Hashing, and Slicing
+#A sequence needs to implement __len__ and __getitem__
+#To support interation only __getitem__ is necessary
+
+######################################################################
+
 def __eq__(self, other):
     return len(self) = len(other) and all(a == b for a, b in zip(self, other))
 
@@ -635,9 +866,79 @@ class <MyClass>():
 #OR:
 <ABC>.register(<MyClass>)
 
+#number ABCs: numbers.Number, ..., numbers.Integral
+
+# ABCs in collections.abc
+# Iterable, Container, Sized
+# Sequence, Mapping, Set
+# Mapping View
+# Callable, Hashable
+# Iterator
+
+######################################################################
+
+#in CPython, don't subclass built-in types: the results can be unpredictable
+#instead, subclass types from the collections module like UserDict, UserList, UserString etc.
+import collections
+
+class DoppelDict2(collections.UserDict):
+    #...
+
+######################################################################
+
+#Unary Operators
+# -       __neg__       if x is -2 then -x == 2
+# +       __pos__
+# ~       __invert__    if x is 2 then ~x == -3
+# abs()   __abs__       if x is -2 then abs(x) == 2
+
+# Other Operators
+# +       __add__       2+3 == 5
+#         __radd__      add method for right-hand argument, important when adding different types
+
+def __add__(self, other):
+    try:
+        pairs = itertools.zip_longest(self, other, fillvalue=0.0)
+        return Vector(a + b for a, b in pairs)
+    except TypeError:
+        return NotImplemented
+
+#in general: infix operators
+#add, sub, mul, truediv, floordiv, mod, divmod, pow, matmul (matrix multiplication), and, or, xor, lshift, rshift
+
+#rich comparison operators
+#eq, ne, gt, lt, ge, le
+def __eq__(self, other):
+    if isinstance(other, Vector):
+        return (len(self) == len(other) and 
+                and(a == b for a, b in zip(self, other)))
+    else:
+        return NotImplemented
+
+#Augmented Assignment Operators
+#when not implemented, just syntactic sugar: a+=b is just a = a+b
+#only implement to change in place
+def __iadd__(self, other):
+    if isinstance(other, Tombola):
+        other_iterable = other.inspect()
+    else:
+        try:
+            other_iterable = iter(other)
+        except TypeError:
+            self_cls = type(self).__name__
+            msg = "right operand in += must be {!r} or an iterable"
+            raise TypeError(msg.format(self_cls))
+    self.load(other_iterable)
+    return self
+
 
 ######################################################################
 #iterators and generators
+
+#when the interpreter needs to interate over an object it calls iter(x)
+#1.)checks whether x implements __iter__ and if not 2.) checks __getitem__
+
+#iterable: any object from which the iter build-in function can obtain an iterator
 
 #iterator:
     __next__
@@ -668,7 +969,59 @@ while True:
         break
 
 
+######################################################################
+
+import re
+
+RE_WORD = re.compile('\w+')
+
+class Sentence:
+    def __init__(self, text):
+        self.text = text
+        self.words = RE_WORD.findall(text)
+
+    def __iter__(self):
+        return SentenceIterator(self.words)
+
+class SentenceIterator:
+    def __init__(self, words):
+        self.words = words
+        self.index = 0
+
+    def __next__(self):
+        try:
+            word = self.words[self.index]
+        except IndexError:
+            raise StopIteration()
+        self.index += 1
+        return word
+
+    def __iter__(self):
+        return self
+
+# iterables have an __iter__ method that instantiates a new iterator every time
+# iterators implement a __next__ method that returns individual items, and an __iter__
+#     method that returns self.
+# therefore, iterators are also iterable, but iterables are not iterators
+
+#using a generator function
+import re
+
+RE_WORD = re.compile('\w+')
+
+class Sentence:
+    def __init__(self, text):
+        self.text = text
+        self.words = RE_WORD.findall(text)
+
+    def __iter__(self):
+        for word in self.words:
+            yield word
+        return
+
+
 #generator: any python function that uses the 'yield' keyword.
+#when called, returns a generator object
 
 def gen_123():
     yield 1
@@ -683,7 +1036,24 @@ next(g)
 
 
 ######################################################################
-#this
+
+#Arithmetic Progression Generator (using a class):
+class ArithmeticProgression:
+    def __init__(self, begin, step, end=None):
+        self.begin = begin
+        self.step = step
+        self.end = end
+
+    def __iter__(self):
+        result = type(self.begin + self.step)(self.begin)
+        forever = self.end is None
+        index = 0
+        while forever or result < self.end:
+            yield result
+            index += 1
+            result = self.begin + self.step * index
+
+#Arithmetic Progression Generator (using a generator function):
 def aritprog_gen(begin, step, end=None):
     result = type(begin + step)(begin)
     forever = end is None
@@ -691,9 +1061,9 @@ def aritprog_gen(begin, step, end=None):
     while forever or result < end:
         yield result
         index += 1
-        result = being + step * index
+        result = begin + step * index
 
-#is equivalent to
+#(using itertools)
 import itertools
 
 def aritprog_gen(begin, step, end=None):
@@ -704,6 +1074,18 @@ def aritprog_gen(begin, step, end=None):
     return ap_gen
 
 ######################################################################
+
+# filter, enumerate, map, zip, reversed, all, any, max, min, sum
+# itertools: compress, dropwhile, filterfalse, islice, takewhile, 
+#            accumulate, starmap,
+#            chain, chain.from_iterable, product, zip_longest,
+#            combinations, combinations_with_replacement, count, cycle, permutations, repeat,
+#            groupby, tee
+# functools: reduce
+
+######################################################################
+
+#iter function with sentinel value
 def d6():
     return randit(1, 6)
 
@@ -717,7 +1099,20 @@ for roll in d6_iter:
 #6
 #3
 
+#read until blank line
+with open('mydata.txt') as fp:
+    for line in iter(fp.readline, ''):
+        process_line(line)
+
 ######################################################################
+
+# 'else' without 'if':
+#     for: the else block will run only if and then the for loop runs to completion
+#     while: the else block will run only if and when the while loop exits because the
+#             condition became falsy
+#     try: the else block will only run if no exception is raised in the try block
+# better keyword would be 'then'
+
 #bad:
 try:
     dangerous_call()
@@ -735,6 +1130,10 @@ else:
 
 ######################################################################
 #context managers:
+
+#context manager protocol: __enter__ and __exit__ methods
+
+#example:
 class LookingGlass:
 
     def __enter__(self):
@@ -754,7 +1153,7 @@ class LookingGlass:
             return True
 
 
-with LookingGlass() as what:
+with LookingGlass() as what:    # 'what' is bound to the return value of __enter__
     print('hello')
     print(what)
 
@@ -764,8 +1163,66 @@ what
 #'JABBERWOCKY'
 
 
+#same example using @contextmanager
+import contextlib
+
+@contextlib.contextmanager
+def looking_glass():
+    import sys
+    original_write = sys.stdout.write
+
+    def reverse_write(text):
+        original_write(text[::-1])
+
+    sys.stdout.write = reverse_write
+    msg = ''
+    try:
+        yield 'JABBERWOCKY'
+    except ZeroDivisionError:
+        msg = 'Please DO NOT divide by zero!'
+    finally:
+        sys.stdout.write = original_write
+        if msg:
+            print(msg)
+
+# the context manager decorator wraps the function in a class that implements __enter__ and __exit__
+# the __enter__ method:
+#     1. invokes the generator function and holds on to the generator object, call it "gen"
+#     2. calls next(gen) to make it run to the yield keyword
+#     3. returns the value yielded by next(gen), so it can be bound to a variable in the with/as form
+# when the with block terminates, the __exit__ method:
+#     1. checks if an exception was passed as exc_type; if so, gen.throw(exception) is invoked,
+#         causing the exception to be raised in the yield line inside the generator function body
+#     2. otherwise, next(gen) is called, resuming the execution of the generator function
+#         body after the yield
+
+
 ######################################################################
 #coroutines
+
+def simple_coroutine():
+    print('-> coroutine started')
+    x = yield
+    print('-> corountine received:', x)
+
+my_coro = simple_coroutine()
+next(my_coro)
+# -> coroutine started
+my_coro.send(42)
+# -> coroutine received: 42
+# Traceback (most recent call last):
+# ...
+# Stop Iteration
+
+
+#A coroutine can be in one of four states. Call inspect.getgeneratorstate()
+#to determine which
+1.) 'GEN_CREATED' waiting to start
+2.) 'GEN_RUNNING' currently being executed
+3.) 'GEN_SUSPENDED' currently suspended at a yield expression
+4.) 'GEN_CLOSED'
+
+
 def simple_coro2(a):
     print('-> Started: a=', a)
     b = yield a
@@ -774,9 +1231,14 @@ def simple_coro2(a):
     print('-> Received: c=', c)
 
 my_coro2 = simple_coro2(14)
+from inspect import getgeneratorstate
+getgeneratorstate(my_coro2)
+#'GEN_CREATED'
 next(my_coro2)
 #-> Started: a = 14
 #14
+getgeneratorstate(my_coro2)
+#'GEN_SUSPENDED'
 my_coro2.send(28)
 #-> Received: b = 28
 #42
@@ -785,3 +1247,39 @@ my_coro2.send(99)
 #Traceback (most recent call last):
 # File "<stdin>", line 1, in <module>
 #Stop Iteration
+getgeneratorstate(my_coro2)
+#'GEN_CLOSED'
+
+######################################################################
+
+#running average using coroutines
+def average():
+    total = 0.0
+    count = 0
+    average = None
+    while True:
+        term = yield average
+        total += term
+        count += 1
+        average = total/count
+
+coro_avg = averager()
+next(coro_avg)
+coro_avg.send(10)
+#10.0
+coro_avg.send(30)
+#20.0
+coro_avg.send(5)
+#15.0
+
+
+#decorator for coroutine priming (so that you don't need to call next)
+from functools import wraps
+
+def coroutine(func):
+    @wraps(func)
+    def primer(*args, **kwargs):
+        gen = func(*args, **kwargs)
+        next(gen)
+        return gen
+    return primer
