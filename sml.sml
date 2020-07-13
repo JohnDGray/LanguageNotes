@@ -488,4 +488,202 @@ while !i<=10 do(
 (*-------------------------------Chapter-8------------------------------------*)
 (* Encapsulation and the ML Module System *)
 
+structure Mapping = struct
+  exception NotFound;
+
+  val create = nil;
+
+  fun lookup(d,nil) = raise NotFound
+  |   lookup(d,(e,r)::es) =
+        if d=e then r
+        else lookup(d,es);
+
+  fun insert(d,r,nil) = [(d,r)]
+  |   insert(d,r,(e,s)::es) =
+        if d=e then (d,r)::es
+        else (e,s)::insert(d,r,es)
+end;
+(* structure Mapping : *)
+(*   sig *)
+(*     exception NotFound *)
+(*     val create : 'a list *)
+(*     val lookup : ''a * (''a * 'b) list -> 'b *)
+(*     val insert : ''a * 'b * (''a * 'b) list -> (''a * 'b) list *)
+(*   end *)
+
+signature RESTRICTEDMAPPING = sig
+  exception NotFound;
+  val lookup : ''a * (''a * 'b) list -> 'b
+end;
+(* signature RESTRICTEDMAPPING = *)
+(*   sig *)
+(*     exception NotFound *)
+(*     val lookup : ''a * (''a * 'b) list -> 'b *)
+(*   end *)
+
+structure restrictedMapping: RESTRICTEDMAPPING = Mapping;
+(* structure restrictedMapping : RESTRICTEDMAPPING *)
+
+signature SIMAPPING = sig
+  exception NotFound;
+  val create : (string * int) list;
+  val insert : string * int * (string * int) list -> (string * int) list;
+  val lookup : string * (string * int) list -> int
+end;
+(* signature SIMAPPING = *)
+(*   sig *)
+(*     exception NotFound *)
+(*     val create : (string * int) list *)
+(*     val insert : string * int * (string * int) list -> (string * int) list *)
+(*     val lookup : string * (string * int) list -> int *)
+(*   end *)
+
+structure SiMapping: SIMAPPING = Mapping;
+(* structure SiMapping : SIMAPPING *)
+
 (*----------------------------------------------------------------------------*)
+
+signature TOTALORDER = sig
+  type element;
+  val lt : element * element -> bool
+end;
+(* signature TOTALORDER =                        *)
+(*   sig                                         *)
+(*     type element                              *)
+(*     val lt : element * element -> bool        *)
+(*   end                                         *)
+
+functor MakeBST(Lt: TOTALORDER):
+  sig
+    type 'label btree;
+    exception EmptyTree;
+    val create : Lt.element btree;
+    val lookup : Lt.element * Lt.element btree -> bool;
+    val insert : Lt.element * Lt.element btree -> Lt.element btree;
+    val deletemin : Lt.element btree -> Lt.element * Lt.element btree;
+    val delete : Lt.element * Lt.element btree -> Lt.element btree
+  end
+=
+  struct
+    open Lt;
+
+    datatype 'label btree =
+      Empty |
+      Node of 'label * 'label btree * 'label btree;
+
+    val create = Empty;
+
+    fun lookup(x, Empty) = false
+    |   lookup(x, Node(y,left,right)) =
+          if lt(x,y) then lookup(x, left)
+          else if lt(y,x) then lookup(x,right)
+          else (* x=y *) true;
+
+    fun insert(x, Empty) = Node(x,Empty,Empty)
+    |   insert(x, T as Node(y,left,right)) =
+          if lt(x,y) then Node(y,insert(x,left),right)
+          else if lt(y,x) then Node(y,left,insert(x,right))
+          else (* x=y *) T; (* do nothing; x was
+                               already there *)
+
+    exception EmptyTree;
+
+    fun deletemin(Empty) = raise EmptyTree
+    |   deletemin(Node(y,Empty,right)) = (y,right)
+    |   deletemin(Node(w,left,right)) =
+          let
+            val (y,L) = deletemin(left)
+          in
+            (y, Node(w,L,right))
+          end;
+
+    fun delete(x, Empty) = Empty
+    |   delete(x, Node(y,left,right)) =
+          if lt(x,y) then Node(y, delete(x,left),right)
+          else if lt(y,x) then Node(y,left,delete(x,right))
+          else (* x=y *)
+            case (left,right) of
+                 (Empty,r) => r |
+                 (l,Empty) => l |
+                 (l,r) =>
+                   let
+                     val (z,r1) = deletemin(r)
+                   in
+                     Node(z,l,r1)
+                   end;
+
+  end;
+(* functor MakeBST(Lt: sig                                                    *)
+(*                       type element                                         *)
+(*                       val lt : element * element -> bool                   *)
+(*                     end) :                                                 *)
+(*                sig                                                         *)
+(*                  type 'a btree                                             *)
+(*                  exception EmptyTree                                       *)
+(*                  val create : Lt.element btree                             *)
+(*                  val lookup : Lt.element * Lt.element btree -> bool        *)
+(*                  val insert : Lt.element * Lt.element btree                *)
+(*                               -> Lt.element btree                          *)
+(*                  val deletemin : Lt.element btree                          *)
+(*                                  -> Lt.element * Lt.element btree          *)
+(*                  val delete : Lt.element * Lt.element btree                *)
+(*                               -> Lt.element btree                          *)
+(*                end                                                         *)
+
+structure String: TOTALORDER =
+  struct
+    type element = string;
+    fun lt(x,y) =
+    let
+      fun lower(nil) = nil
+      |   lower(c::cs) =
+            (Char.toLower c)::lower(cs);
+    in
+      implode(lower(explode(x))) <
+        implode(lower(explode(y)))
+    end;
+  end;
+(* structure String : TOTALORDER    *)
+
+structure StringBST = MakeBST(String);
+(* structure StringBST :                                                      *)
+(*   sig                                                                      *)
+(*     datatype 'a btree = ...                                                *)
+(*     exception EmptyTree                                                    *)
+(*     val create : Lt.element btree                                          *)
+(*     val lookup : Lt.element * Lt.element btree -> bool                     *)
+(*     val insert : Lt.element * Lt.element btree -> Lt.element btree         *)
+(*     val deletemin : Lt.element btree -> Lt.element * Lt.element btree      *)
+(*     val delete : Lt.element * Lt.element btree -> Lt.element btree         *)
+(*   end                                                                      *)
+
+(*----------------------------------------------------------------------------*)
+
+(* alternatively... *)
+(* functor MakeBST(structure Lt: TOTALORDER): *)
+(* ... *)
+
+(* structure StringBST = MakeBST(structure Lt = String); *)
+
+(*----------------------------------------------------------------------------*)
+
+(* signature INT = sig val i: int end; *)
+(* signature REAL = sig val r: real end; *)
+
+(* functor Foo(structure I: INT and R:REAL) = ... *)
+(* functor Foo(structure I: INT; structure R: REAL) = ... *)
+(* functor Foo(structure I: INT and R: REAL; val x : INT) = ... *)
+
+(* structure Int = struct val i = 0 end; *)
+(* structure Real = struct val r = 0.0 end; *)
+
+(* structure Bar = Foo(structure I = Int; structure R = Real); *)
+(* structure Bar = Foo(structure I = Int and R = Real); *)
+
+(*----------------------------------------------------------------------------*)
+
+(* sharing type <type> = <type> = ... = <type>      *)
+(* the types must be the same                       *)
+
+(* sharing <structure> = <structure> = ... = <structure>              *)     
+(* identically named types within the structures must be the same     *)
